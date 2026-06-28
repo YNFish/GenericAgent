@@ -410,16 +410,13 @@ if __name__ == '__main__':
     _do_relogin = '--relogin' in sys.argv
     try: _lock = socket.socket(socket.AF_INET, socket.SOCK_STREAM); _lock.bind(('127.0.0.1', 19531))
     except OSError: print('[WeChat] Another instance running, exiting.'); sys.exit(1)
+    bot = WxBotClient()
+    if _do_relogin or not bot.token:
+        # stdout still points to terminal → QR code will display properly
+        bot.login_qr()
     _logf = open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'temp', 'wechatapp.log'), 'a', encoding='utf-8', buffering=1)
     sys.stdout = sys.stderr = _logf
     print(f'[NEW] Process starting {time.strftime("%m-%d %H:%M")}')
-    bot = WxBotClient()
-    if _do_relogin or not bot.token:
-        if not sys.stdout.isatty():
-            print('[Bot] no token and not interactive, exit.'); sys.exit(1)
-        sys.stdout = sys.stderr = sys.__stdout__  # restore for QR display
-        bot.login_qr()
-        sys.stdout = sys.stderr = _logf
     threading.Thread(target=agent.run, daemon=True).start()
     print(f'WeChat Bot 已启动 (bot_id={bot.bot_id})', file=sys.__stdout__)
     try:
